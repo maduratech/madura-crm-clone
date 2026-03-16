@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { AUTH_2FA_PENDING_KEY, AUTH_SESSION_LOST_KEY, AUTH_INACTIVE_KEY } from '../lib/authConstants';
+import { AUTH_SESSION_LOST_KEY, AUTH_INACTIVE_KEY } from '../lib/authConstants';
 import { IconCustomers, IconEye, IconEyeOff, IconX } from '../constants';
 import { useToast } from './ToastProvider';
 
@@ -94,13 +94,6 @@ const AuthPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-
-  /* 2FA OTP step: after successful password sign-in we send OTP and show this step. */
-  const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
-  const [otpEmail, setOtpEmail] = useState('');
-  const [otpValue, setOtpValue] = useState('');
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [otpError, setOtpError] = useState<string | null>(null);
   const [sessionLostMessage, setSessionLostMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -121,35 +114,12 @@ const AuthPage: React.FC = () => {
     setMessage(null);
 
     try {
-      // Set pending 2FA *before* password sign-in so AuthProvider rejects the resulting session and keeps user on login until OTP is done.
-      if (typeof sessionStorage !== 'undefined') {
-        sessionStorage.setItem(AUTH_2FA_PENDING_KEY, email);
-      }
-
-      let { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(AUTH_2FA_PENDING_KEY);
         throw error;
       }
-
-      // AuthProvider will have rejected this session (auth_2fa_pending === email), so user stays on AuthPage. Now send OTP and show OTP step.
-      await supabase.auth.signOut();
-      const otpOptions = { shouldCreateUser: false as const, emailRedirectTo: window.location.origin };
-      let { error: otpSendError } = await supabase.auth.signInWithOtp({ email, options: otpOptions });
-      if (otpSendError) {
-        const retry = await supabase.auth.signInWithOtp({ email, options: otpOptions });
-        otpSendError = retry.error;
-      }
-      if (otpSendError) {
-        if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(AUTH_2FA_PENDING_KEY);
-        throw otpSendError;
-      }
-      setOtpEmail(email);
-      setOtpValue('');
-      setOtpError(null);
-      setStep('otp');
+      // On success, AuthProvider will pick up the session and redirect.
     } catch (err: any) {
-      if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(AUTH_2FA_PENDING_KEY);
       const msg = err?.message ?? '';
       if (msg.includes('NetworkError') || msg.includes('Failed to fetch')) {
         setError('Connection failed. Please check your internet or disable any ad-blockers/extensions that might be blocking the connection.');
@@ -158,51 +128,6 @@ const AuthPage: React.FC = () => {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = otpValue.trim().replace(/\s/g, '');
-    if (!code || !otpEmail) {
-      setOtpError('Please enter the 6-digit code from your email.');
-      return;
-    }
-    setOtpLoading(true);
-    setOtpError(null);
-    try {
-      // Clear pending 2FA *before* verifyOtp so when onAuthStateChange fires, AuthProvider accepts the new session and redirects to dashboard.
-      if (typeof sessionStorage !== 'undefined') {
-        sessionStorage.removeItem(AUTH_2FA_PENDING_KEY);
-      }
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email: otpEmail,
-        token: code,
-        type: 'email',
-      });
-      if (verifyError) {
-        // Restore flag so user can retry OTP or go back to login
-        if (typeof sessionStorage !== 'undefined') {
-          sessionStorage.setItem(AUTH_2FA_PENDING_KEY, otpEmail);
-        }
-        throw verifyError;
-      }
-      setOtpValue('');
-      setStep('credentials');
-      // Session is now established; AuthProvider will set profile and redirect to dashboard.
-    } catch (err: any) {
-      setOtpError(err?.message ?? 'Invalid or expired code. Please try again.');
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  const handleBackFromOtp = () => {
-    setStep('credentials');
-    setOtpValue('');
-    setOtpError(null);
-    if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.removeItem(AUTH_2FA_PENDING_KEY);
     }
   };
 
@@ -273,57 +198,7 @@ const AuthPage: React.FC = () => {
               </p>
             )}
 
-            {/* 2FA OTP step: show after successful password + OTP sent */}
-            {step === 'otp' ? (
-              <div className="space-y-4">
-                <p className="text-sm text-slate-300">
-                  We sent a 6-digit code to <strong className="text-white">{otpEmail}</strong>. Enter it below.
-                </p>
-                <form onSubmit={handleVerifyOtp} className="space-y-4">
-                  <div>
-                    <label htmlFor="otp-code" className="block text-sm font-medium text-slate-300">
-                      Verification code
-                    </label>
-                    <input
-                      id="otp-code"
-                      name="otp"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={6}
-                      placeholder="000000"
-                      value={otpValue}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/\D/g, '').slice(0, 6);
-                        setOtpValue(v);
-                        setOtpError(null);
-                      }}
-                      className="mt-1 block w-full px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 bg-slate-900/50 border border-slate-600 rounded-md shadow-sm text-white placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-center text-xl tracking-[0.5em] font-mono"
-                    />
-                  </div>
-                  {otpError && <p className="text-sm text-red-400 bg-red-900/50 p-3 rounded-md break-words">{otpError}</p>}
-                  <div className="flex flex-col gap-2">
-                    <button
-                      type="submit"
-                      disabled={otpLoading || otpValue.replace(/\D/g, '').length !== 6}
-                      className="w-full flex justify-center py-3 sm:py-2.5 px-4 min-h-[44px] sm:min-h-0 border border-transparent rounded-[5px] shadow-sm text-sm font-medium text-white bg-[#191974] hover:bg-[#13135c] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500 disabled:bg-slate-500 disabled:cursor-not-allowed touch-manipulation"
-                    >
-                      {otpLoading ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      ) : 'Verify & Sign In'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleBackFromOtp}
-                      className="text-sm text-slate-400 hover:text-slate-200 touch-manipulation"
-                    >
-                      ← Back to login
-                    </button>
-                  </div>
-                </form>
-              </div>
-            ) : (
-              <>
+            <>
             <div className="bg-slate-800/50 rounded-lg p-1 flex mb-5 sm:mb-6 border border-slate-700">
               <TabButton
                 label="Email & Password"
@@ -444,7 +319,7 @@ const AuthPage: React.FC = () => {
             )}
 
               </>
-            )}
+            }
 
           </div>
         </div>

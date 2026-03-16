@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
-import { AUTH_2FA_PENDING_KEY, AUTH_SESSION_LOST_KEY, AUTH_INACTIVE_KEY } from "../lib/authConstants";
+import { AUTH_SESSION_LOST_KEY, AUTH_INACTIVE_KEY } from "../lib/authConstants";
 import { LoggedInUser, Staff, StaffStatus, UserRole, Activity, getRoleName, RoleTag } from "../types";
 import { useToast } from "../components/ToastProvider";
 
@@ -333,16 +333,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
         if (!mounted) return;
 
-        // 2FA: if session exists but this email is in "pending 2FA" (OTP sent, not yet verified), do not accept the session.
-        const pending2FaEmail = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(AUTH_2FA_PENDING_KEY) : null;
-        if (initialSession?.user?.email && pending2FaEmail === initialSession.user.email) {
-          await supabase.auth.signOut();
-          setProfile(null);
-          setSession(null);
-          setLoading(false);
-          return;
-        }
-
         if (initialSession) {
           const userProfile = await getProfile(initialSession.user);
 
@@ -455,17 +445,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             if (profileIdRef.current && typeof sessionStorage !== 'undefined') {
               sessionStorage.setItem(AUTH_SESSION_LOST_KEY, '1');
             }
-            profileIdRef.current = null;
-            setSession(null);
-            setProfile(null);
-            setLoading(false);
-            return;
-          }
-
-          // 2FA: reject session if this email is still pending OTP verification (flag is cleared only after successful verifyOtp in AuthPage).
-          const pending2FaEmail = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(AUTH_2FA_PENDING_KEY) : null;
-          if (session.user?.email && pending2FaEmail === session.user.email) {
-            await supabase.auth.signOut();
             profileIdRef.current = null;
             setSession(null);
             setProfile(null);
