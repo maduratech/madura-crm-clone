@@ -1,0 +1,16 @@
+{
+  "headers": [
+    {
+      "source": "/(.*).tsx",
+      "headers": [
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!api/|_next/|favicon.ico|vite.svg|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "CRM -1",
+  "description": "A modern, minimal, and professional CRM application with a clean UI/UX, built with React and Tailwind CSS. It features a dashboard, lead management, customer tracking, and more.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

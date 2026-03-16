@@ -1,0 +1,166 @@
+:root {
+  /* App header height used for sticky table headers */
+  --app-header-height: 56px; /* default for small screens (h-14 => 3.5rem => 56px) */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+
+  --radius: 0.5rem;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Custom scrollbar styles for a more modern look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  /* slate-100 */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  /* slate-300 */
+  border-radius: 10px;
+  border: 2px solid #f1f5f9;
+  /* slate-100 */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  /* slate-400 */
+}
+
+/* Hide scrollbar for horizontal tab strips (e.g. mobile) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure list styles are applied within Prose elements from the rich text editor */
+.prose ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  /* Equivalent to pl-6 */
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  /* Equivalent to pl-6 */
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* Fix for misaligned background color on highlighted text within .prose */
+.prose span[style*="background-color"] {
+  padding: 0.1em 0;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Utility to prevent elements from breaking across pages in PDF generation */
+.pdf-avoid-break {
+  page-break-inside: avoid;
+}
+
+/* PDF Font Override Styles */
+.pdf-font-override,
+.pdf-font-override * {
+  font-family: Arial, sans-serif !important;
+}
+
+.pdf-font-override p,
+.pdf-font-override li,
+.pdf-font-override .prose,
+.pdf-font-override .text-sm,
+.pdf-font-override .text-xs {
+  font-size: 10px !important;
+}
+
+.pdf-font-override h1 {
+  font-size: 14px !important;
+}
+
+.pdf-font-override h3 {
+  font-size: 13px !important;
+}
+
+.pdf-font-override h4 {
+  font-size: 12px !important;
+}
+
+/* Fix for day-wise plan number alignment in PDF */
+.pdf-font-override .day-timeline-circle {
+  /* Nudge the number up slightly for perfect vertical centering in PDF */
+  padding-bottom: 2px !important;
+  box-sizing: border-box !important;
+}
+
+.pdf-font-override .pdf-hide-flight-price {
+  display: none !important;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+@media (min-width: 640px) {
+  /* matches Tailwind's sm breakpoint where header becomes h-16 */
+  :root {
+    --app-header-height: 64px; /* h-16 => 4rem => 64px */
+  }
+}
