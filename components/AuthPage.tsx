@@ -198,7 +198,6 @@ const AuthPage: React.FC = () => {
               </p>
             )}
 
-            <>
             <div className="bg-slate-800/50 rounded-lg p-1 flex mb-5 sm:mb-6 border border-slate-700">
               <TabButton
                 label="Email & Password"
@@ -317,9 +316,6 @@ const AuthPage: React.FC = () => {
                 )}
               </form>
             )}
-
-              </>
-            }
 
           </div>
         </div>
