@@ -1,5 +1,3 @@
-Designed & Developed By <a href="www.builtbybrevia.com">BuiltByBrevia</a>
-
 ## CRM Setup (from `git clone`)
 
 This project is the CRM frontend (Vite/React). It expects environment variables to be present in a local `.env`.
@@ -16,11 +14,13 @@ cd madura-crm-clone
 1. Copy the template:
 
 #### PowerShell (Windows)
+
 ```powershell
 Copy-Item .\example.env .\.env
 ```
 
 #### CMD (Windows)
+
 ```bat
 copy example.env .env
 ```
